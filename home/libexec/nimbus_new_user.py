@@ -136,7 +136,10 @@ def cloud_props(o):
     fout = open(o.cloud_properties, "w")
     for l in fin.readlines():
         for k in string_subs:
-            l = l.replace(k, string_subs[k])
+            v = string_subs[k]
+            if v == None:
+                v = ""
+            l = l.replace(k, v)
         fout.write(l)
     fin.close()
     fout.close()
@@ -286,14 +289,16 @@ def create_user(o, db):
 def do_web_bidnes(o):
     
     # import this here because otherwise errors will be thrown when
-    # the settings.py is imported (transitively) and for example there
-    # is no web database setup.  Web is disabled by default in a Nimbus
-    # install, we should keep the experience cleanest for new admins.
+    # the settings.py is imported (transitively).  Web is disabled by 
+    # default in a Nimbus install, we should keep the experience cleanest
+    # for new admins.
     try:
         import nimbusweb.portal.nimbus.create_web_user as create_web_user
-    except:
-        print "\nERROR linking with web application (have you ever run web/bin/run-standalone-ssl.sh which sets things up?)\n"
-        raise
+    except Exception, e:
+        msg = "\nERROR linking with web application (have you ever sets up the web application?)\n"
+        msg += "\nSee: http://www.nimbusproject.org/docs/current/admin/reference.html#nimbusweb-usage\n"
+        msg += "\n%s\n" % e
+        raise CLIError('EUSER', "%s" % msg)
     
     (errmsg, url) = create_web_user.create_web_user(o.web_id, o.emailaddr, o.cert, o.key, o.access_id, o.access_secret, o.cloud_properties)
     
