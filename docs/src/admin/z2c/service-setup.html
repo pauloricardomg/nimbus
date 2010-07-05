@@ -70,7 +70,7 @@ $ ./install $NIMBUS_HOME
 </pre>
 
 <div class="note">
-    <p class="note-title">Service ports</p>
+    <p class="note-title">Alternate Python</p>
     <p>
         If you need to specify a non default Python, you can do so by setting the
         <tt class="literal">PYTHON</tt> environment variable. For example if you
@@ -106,34 +106,12 @@ $ ./install $NIMBUS_HOME
     <p>
         Nimbus requires several network ports. We have chosen some sensible defaults,
         but you may adjust them if needed. The initial default set is:
+    </p>
         <UL>
             <LI>Cumulus : 8888</LI>
             <LI>Nimbus Service interface : 8443</LI>This is used by the cloud-client
             <LI>EC2 compatible REST Interface: 8444</LI>
         </UL>
-
-    </p>
-    <B>Changing the Cumulus port</b>
-    <p>
-        The configuration options for Cumulus can be found in 
-        $NIMBUS_HOME/cumulus/etc/cumulus.ini.  Under the heading [cb] there is a port =
-        entry.  Change that value and restart Cumulus with the <i>nimbusctl</i>
-        program.
-        <pre>
-[cb]
-
-installdir = &lt;nimbus home&gt;
-port = 8888
-hostname = &lt;hostname&gt;
-        </pre>
-
-        <i>note:</i>
-        If this change is made after you have distributed a cloud.properties
-        file to users then you will need to instruct your cloud-client users
-        to change the value vws.repository=<hostname>:<port> in their local
-        cloud.properties file.
-
-    </p>
 </div>
 
 
@@ -148,9 +126,9 @@ $ cd $NIMBUS_HOME
 </pre>
 <pre class="panel">
 $ ls bin/
-nimbus-configure	nimbus-new-cert		nimbusctl
-nimbus-edit-user	nimbus-new-user
-nimbus-list-users	nimbus-remove-user
+nimbus-configure    nimbus-new-cert     nimbusctl
+nimbus-edit-user    nimbus-new-user
+nimbus-list-users   nimbus-remove-user
 </pre>
 
 <p>
@@ -184,7 +162,7 @@ $ ./bin/nimbus-new-user -d /tmp/newuser someone@someplace.com
 
 cert            : /tmp/newuser/usercert.pem
 key             : /tmp/newuser/userkey.pem
-dn              : /O=Auto/OU=97e51165-cdb4-4376-b2ed-146f0cf67fbe/CN=someone@someplace.com
+dn              : /O=Auto/OU=NimbusTestCA/CN=someone@someplace.com
 canonical id    : d5170810-85f8-11df-86fa-001641156eb6
 access id       : pig5Rexcj6uFQBH3exGM5
 access secret   : uQA6LqXSVNFwubQ505II1kqeLMEsEXGd1oXGNjwp0G
@@ -224,16 +202,68 @@ $ tar xfz nimbus-cloud-client-016.tar.gz
     any credentials you already have in <tt class="literal">~/.globus/</tt>.
 </p>
 <pre class="panel">
-$ cp newuser/cloud.properties nimbus-cloud-client-016/conf/
+$ cp /tmp/newuser/cloud.properties nimbus-cloud-client/conf/
 </pre>
 <pre class="panel">
 $ mkdir ~/.globus/
 </pre>
 <pre class="panel">
-$ cp newuser/*.pem ~/.globus/
+$ cp /tmp/newuser/*.pem ~/.globus/
+</pre>
+
+<p>
+    Naturally, if you are testing the client on a different system than the service installation,
+    you'll need to use <tt class="literal">scp</tt> or similar to copy these files. 
+</p>
+
+<p>
+    You also need to grab a few more files from the Nimbus service installation and drop
+    them into the client. These are the internal CA certificates and enable the client to
+    trust the client. The needed files are in
+    <tt class="literal">$NIMBUS_HOME/var/ca/trusted-certs/</tt>.
+</p>
+<pre class="panel">
+$ cp $NIMBUS_HOME/var/ca/trusted-certs/* nimbus-cloud-client/lib/certs/
 </pre>
 
 <h3>Try it out!</h3>
+<p>
+    Now we have what should be a working client and are ready to test the service. The first step
+    is to initialize the grid proxy.
+</p>
+<pre class="panel">
+$ cd nimbus-cloud-client/
+</pre>
+<pre class="panel">
+$ ./bin/grid-proxy-init.sh
+</pre>
+<p>
+    Next we will attempt to query the service. This command shows the running VMs that you own.
+    Of course you do not have any at this point, but this can help to diagnose any configuration
+    or security problems.
+</p>
+<pre class="panel">
+$ ./bin/cloud-client.sh --status
+
+Querying for ALL instances.
+
+There's nothing running on this cloud that you own.
+</pre>
+<p>
+    If you see this message, all is well. You've successfully queried the running Nimbus service!
+    The next step is to query Cumulus and list the available images you have to run. Again, of
+    course you will have none.
+</p>
+<pre class="panel">
+$ bin/cloud-client.sh --list
+
+No files.
+</pre>
+<p>
+    If that command succeeded, then all of the Nimbus services are operational. We will come back
+    to this client later and use it to transfer and start real VMs. But for now, let's turn attention
+    back to the service node to <a href="networking-setup.html">Install DHCPd and Configure Networking</a>.
+</p>
 
 
 
