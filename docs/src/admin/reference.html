@@ -1,5 +1,5 @@
 m4_include(/mcs/m4/worksp.lib.m4)
-_NIMBUS_HEADER(2.5RC1 Admin Reference)
+_NIMBUS_HEADER(2.5RC2 Admin Reference)
 _NIMBUS_HEADER2(n,n,y,n,n,n,n)
 _NIMBUS_LEFT2_COLUMN
 _NIMBUS_LEFT2_ADMIN_SIDEBAR(n,n,y,n,n)
@@ -7,7 +7,7 @@ _NIMBUS_LEFT2_COLUMN_END
 _NIMBUS_CENTER2_COLUMN
 _NIMBUS_2_5_DEPRECATED
 
-<h2>Nimbus 2.5RC1 Admin Reference</h2>
+<h2>Nimbus 2.5RC2 Admin Reference</h2>
 
 <p>
     This section explains some side tasks as well as some
@@ -138,9 +138,11 @@ _NIMBUS_2_5_DEPRECATED
             <li>
                 <a href="#cumulus-quotas">Disk Usage Quota</a>
             </li>
+            <li>
+                <a href="#cumulusnimbusconfig">Configuring Cumulus Options in Nimbus</a>
+            </li>
         </ul>
     </li>
-
 
 </ul>
 
@@ -639,7 +641,7 @@ Running: 'vm-023'
 </div>
 
 <p>
-    There are (intentionally) <b>no fallback settings</b> for many of the properties:
+    There are (intentionally) <b>no fallback settings</b> for many of the properties, they will be included in the cloud.properties file you give to a user:
 </p>
 
 <ul>
@@ -648,6 +650,7 @@ Running: 'vm-023'
     <li>vws.factory.identity (Virtal Workspace Service X509 identity)</li>
     <li>vws.repository (Host+port of cumulus image repository)</li>
     <li>vws.repository.type=cumulus (currently cumulus is the only supported repository protocol</li>
+    <li>vws.repository.canonicalid (The users canonical ID)</li>
     <li>vws.repository.s3id (The users S3 ID)</li>
     <li>vws.repository.s3key (The users S3 secret key)</li>
     <li>vws.repository.s3bucket (The bucket where the system stores images)</li>
@@ -1139,13 +1142,23 @@ hostname = &lt;hostname&gt;
     these three files, copy in your own hostcert.pem and hostkey.pem, and run
     <em>nimbus-configure</em>, which will generate the keystore.
 </p>
-<p>
-    <b>NOTE:</b>
+<div class="note">
+<p class="note-title">CA Certs</p>
     It is important that the issuing CA cert is trusted by Nimbus (and any
     clients used to access the Nimbus services). This is done by placing the
     hashed form of the CA files in the trusted-certs directory, by default
     "$NIMBUS_HOME/var/ca/trusted-certs/". For example, these three files:
 </p>
+</div>
+<div class="note">
+<p class="note-title">Cumulus https</p>
+    <b>NOTE:</b>
+    If you are using Cumulus with https you will need to point it at the
+    correct certificates as well.  This is further explained 
+    <a href="#cumulus-https">here.</a>
+</p>
+</div>
+
 <div class="screen"><pre>
 3fc18087.0
 3fc18087.r0
@@ -1814,6 +1827,13 @@ called cumulus.ini) in one or all of the following locations:
         <li>the same directory from which the program was launched</li>
         <li>file pointed to by the environment variable CUMULUS_SETTINGS_FILE</li>
     </ol>
+<div class="note">
+<p class="note-title">cumulus.ini in Nimbus</p>
+For Nimbus installations this file can be found at
+<tt class="literal">$NIMBUS_HOME/cumulus/etc/cumulus.ini</tt>
+</p>
+</div>
+
 <p>
 Each file in the path is read in (provided it exists).  The values found 
 in each file override the values found in the previous file in this list.
@@ -1912,6 +1932,37 @@ quota           : 100
 canonical id    : 21161ebe-862a-11df-a9ca-001de0a80259
 </pre>
 
+<a name="cumulusnimbusconfig"> </a>
+<h3>Configuring Cumulus Options in Nimbus _NAMELINK(cumulusnimbusconfig)</h3>
+
+<p>
+
+There are a few variables that Nimbus relies on to find information 
+about its co-located Cumulus server.  These variables are found in
+the file: 
+<tt class="literal">./services/etc/nimbus/workspace-service/cumulus.conf</tt>.
+They are normally written automatically by the nimbus-configure program 
+but if an administrator makes some manual changes to their Nimbus installation
+some of these variables may been to be changed as well.
+
+<ul>
+    <li><tt class="literal">cumulus.authz.db</tt></li>
+    The cumulus authz database.  By default it is an sqlite database and
+    is located at $NIMBUS_HOME/cumulus/etc/authz.db
+
+    <li><tt class="literal">cumulus.repo.dir</tt></li>
+    The location of the cumulus posix backend file repository.  By default
+    this is $NIMBUS_HOME/cumulus/posixdata.  Quite often users will want
+    to change this to a more favorable location.  Likely one with more
+    disk space or faster disks.
+
+    <li><tt class="literal">cumulus.repo.bucket</tt></li>
+    The cumulus bucket in which all cloud client images are stored.
+
+    <li><tt class="literal">cumulus.repo.prefix</tt></li>
+    The prefix iwith which all image names are prepended.
+
+</ul>
 
 <br />
 <br />
